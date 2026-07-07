@@ -154,7 +154,6 @@ const elements = {
   turnTranslation: document.querySelector("#turnTranslation"),
   statusMessage: document.querySelector("#statusMessage"),
   listenButton: document.querySelector("#listenButton"),
-  retryButton: document.querySelector("#retryButton"),
   passButton: document.querySelector("#passButton"),
   completeSummary: document.querySelector("#completeSummary")
 };
@@ -164,6 +163,8 @@ let selectedTopic = null;
 let turnIndex = 0;
 let recognition = null;
 let preferredTinyTalkVoice = null;
+let listeningTimeout = null;
+let speechPrimed = false;
 
 async function loadTopics() {
   try {
@@ -247,6 +248,7 @@ function openLesson(topic) {
 
 function startLesson() {
   turnIndex = 0;
+  primeSpeechSynthesis();
   showScreen("conversation");
   renderTurn();
 }
@@ -260,11 +262,11 @@ function renderTurn() {
   elements.turnText.textContent = turn.text;
   elements.turnTranslation.textContent = turn.translation || "";
   elements.statusMessage.textContent = isParent
-    ? "Press Speak and say the sentence. Pass is okay for practice."
+    ? "Tap to talk, then say the sentence. Pass is okay for practice."
     : "TinyTalk is speaking.";
   elements.listenButton.disabled = !isParent;
-  elements.retryButton.disabled = !isParent;
   elements.passButton.disabled = !isParent || !turn.allowPass;
+  resetTalkButton();
 
   if (!isParent) {
     speakTurn(turn.text);
@@ -279,15 +281,58 @@ function speakTurn(text) {
     return;
   }
 
+  primeSpeechSynthesis();
+  setTimeout(() => playTinyTalkSpeech(text), 120);
+}
+
+function playTinyTalkSpeech(text, attempt = 1) {
+  const voicesReady = window.speechSynthesis.getVoices().length > 0;
+
+  if (!voicesReady && attempt <= 6) {
+    setTimeout(() => playTinyTalkSpeech(text, attempt + 1), 180);
+    return;
+  }
+
   window.speechSynthesis.cancel();
+  window.speechSynthesis.resume();
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.voice = getTinyTalkVoice();
   utterance.pitch = 1.35;
   utterance.rate = 0.78;
   utterance.volume = 1;
-  utterance.onend = () => setTimeout(nextTurn, 350);
+
+  let finished = false;
+  const finishSpeaking = () => {
+    if (finished) {
+      return;
+    }
+
+    finished = true;
+    setTimeout(nextTurn, 350);
+  };
+
+  utterance.onend = finishSpeaking;
+  utterance.onerror = () => {
+    if (attempt <= 2) {
+      setTimeout(() => playTinyTalkSpeech(text, attempt + 1), 250);
+      return;
+    }
+
+    finishSpeaking();
+  };
+
   window.speechSynthesis.speak(utterance);
+
+  setTimeout(() => {
+    if (!finished && !window.speechSynthesis.speaking) {
+      window.speechSynthesis.resume();
+      if (attempt <= 2) {
+        playTinyTalkSpeech(text, attempt + 1);
+      }
+    }
+  }, 900);
 }
 
 function getTinyTalkVoice() {
@@ -333,6 +378,10 @@ if ("speechSynthesis" in window) {
 }
 
 function startListening() {
+  if (recognition) {
+    return;
+  }
+
   const SpeechRecognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -342,23 +391,40 @@ function startListening() {
     return;
   }
 
+  primeSpeechSynthesis();
   recognition = new SpeechRecognition();
   recognition.lang = "en-US";
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   elements.statusMessage.textContent = "Listening...";
+  elements.listenButton.textContent = "...";
+  elements.listenButton.disabled = true;
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
+    stopListeningTimer();
     checkAnswer(transcript);
   };
 
   recognition.onerror = () => {
     elements.statusMessage.textContent =
-      "Microphone was blocked or could not hear you. Please retry.";
+      "Microphone was blocked or could not hear you. Tap to talk again.";
+    resetRecognitionState();
+  };
+
+  recognition.onend = () => {
+    resetRecognitionState();
   };
 
   recognition.start();
+  listeningTimeout = setTimeout(() => {
+    if (recognition) {
+      recognition.abort();
+      elements.statusMessage.textContent =
+        "I did not hear anything. Tap to talk again.";
+      resetRecognitionState();
+    }
+  }, 6500);
 }
 
 function checkAnswer(transcript) {
@@ -378,7 +444,41 @@ function checkAnswer(transcript) {
 
   elements.statusMessage.textContent = `I heard: "${transcript}" (${Math.round(
     result.score * 100
-  )}%). Try again or press Pass.`;
+  )}%). Tap to talk again or press Pass.`;
+}
+
+function primeSpeechSynthesis() {
+  if (!("speechSynthesis" in window) || speechPrimed) {
+    return;
+  }
+
+  window.speechSynthesis.getVoices();
+  const utterance = new SpeechSynthesisUtterance(" ");
+  utterance.volume = 0;
+  utterance.rate = 1;
+  utterance.onend = () => {
+    speechPrimed = true;
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopListeningTimer() {
+  if (listeningTimeout) {
+    clearTimeout(listeningTimeout);
+    listeningTimeout = null;
+  }
+}
+
+function resetRecognitionState() {
+  stopListeningTimer();
+  recognition = null;
+  resetTalkButton();
+}
+
+function resetTalkButton() {
+  elements.listenButton.textContent = "Tap to talk";
+  elements.listenButton.disabled =
+    !selectedTopic || selectedTopic.turns[turnIndex].speaker !== "parent";
 }
 
 function nextTurn() {
@@ -524,7 +624,6 @@ function escapeHtml(value) {
 elements.searchInput.addEventListener("input", filterTopics);
 elements.startLesson.addEventListener("click", startLesson);
 elements.listenButton.addEventListener("click", startListening);
-elements.retryButton.addEventListener("click", renderTurn);
 elements.passButton.addEventListener("click", nextTurn);
 document.querySelector("#backToHomeFromIntro").addEventListener("click", () => showScreen("home"));
 document
