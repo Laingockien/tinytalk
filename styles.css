@@ -219,6 +219,32 @@ h2 {
     0 0 0 5px rgba(255, 84, 187, 0.16);
 }
 
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 8px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: var(--shadow-inset);
+}
+
+.tab-button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 50px;
+  background: transparent;
+  color: var(--color-stone);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tab-button.is-active {
+  background: var(--color-pure-white);
+  color: var(--color-ink-black);
+}
+
 .topic-list {
   display: grid;
   gap: 16px;
@@ -289,6 +315,30 @@ h2 {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
+}
+
+.practice-again-button {
+  min-height: 44px;
+  margin-top: 18px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 50px;
+  background: var(--color-hot-pink);
+  color: var(--color-pure-white);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 28px;
+  border-radius: 32px;
+  background: var(--color-pure-white);
+  color: var(--color-stone);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: var(--shadow-inset);
 }
 
 .pill {
