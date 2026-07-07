@@ -317,17 +317,22 @@ function startListening() {
 
 function checkAnswer(transcript) {
   const turn = selectedTopic.turns[turnIndex];
-  const accepted = [turn.text, ...(turn.acceptableVariants || [])].some((phrase) =>
-    normalizeText(transcript).includes(normalizeText(phrase))
+  const result = scoreAnswer(
+    transcript,
+    [turn.text, ...(turn.acceptableVariants || [])]
   );
 
-  if (accepted) {
-    elements.statusMessage.textContent = `Accepted: "${transcript}"`;
+  if (result.accepted) {
+    elements.statusMessage.textContent = `Accepted (${Math.round(
+      result.score * 100
+    )}%): "${transcript}"`;
     setTimeout(nextTurn, 500);
     return;
   }
 
-  elements.statusMessage.textContent = `I heard: "${transcript}". Try again or press Pass.`;
+  elements.statusMessage.textContent = `I heard: "${transcript}" (${Math.round(
+    result.score * 100
+  )}%). Try again or press Pass.`;
 }
 
 function nextTurn() {
@@ -357,6 +362,108 @@ function normalizeText(value) {
     .replace(/[^a-z0-9 ]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function scoreAnswer(transcript, acceptedPhrases) {
+  const heard = normalizeText(transcript);
+  const scores = acceptedPhrases
+    .map((phrase) => scorePhrase(heard, normalizeText(phrase)))
+    .filter((score) => Number.isFinite(score));
+  const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
+
+  return {
+    accepted: bestScore >= 0.58,
+    score: bestScore
+  };
+}
+
+function scorePhrase(heard, expected) {
+  if (!heard || !expected) {
+    return 0;
+  }
+
+  if (heard.includes(expected) || expected.includes(heard)) {
+    return 1;
+  }
+
+  const heardWords = getImportantWords(heard);
+  const expectedWords = getImportantWords(expected);
+
+  if (expectedWords.length === 0) {
+    return similarity(heard, expected);
+  }
+
+  const matchedWords = expectedWords.filter((word) =>
+    heardWords.some((heardWord) => wordsAreClose(heardWord, word))
+  );
+  const wordScore = matchedWords.length / expectedWords.length;
+  const characterScore = similarity(heard, expected);
+
+  return wordScore * 0.72 + characterScore * 0.28;
+}
+
+function getImportantWords(value) {
+  const lightWords = new Set([
+    "a",
+    "an",
+    "the",
+    "to",
+    "is",
+    "are",
+    "am",
+    "do",
+    "did",
+    "you",
+    "your",
+    "i",
+    "it"
+  ]);
+
+  return normalizeText(value)
+    .split(" ")
+    .filter((word) => word.length > 1 && !lightWords.has(word));
+}
+
+function wordsAreClose(heardWord, expectedWord) {
+  if (heardWord === expectedWord) {
+    return true;
+  }
+
+  if (heardWord.length <= 3 || expectedWord.length <= 3) {
+    return false;
+  }
+
+  return similarity(heardWord, expectedWord) >= 0.72;
+}
+
+function similarity(left, right) {
+  const distance = levenshteinDistance(left, right);
+  const longest = Math.max(left.length, right.length, 1);
+  return 1 - distance / longest;
+}
+
+function levenshteinDistance(left, right) {
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  const current = new Array(right.length + 1);
+
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    current[0] = leftIndex;
+
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const cost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+      current[rightIndex] = Math.min(
+        current[rightIndex - 1] + 1,
+        previous[rightIndex] + 1,
+        previous[rightIndex - 1] + cost
+      );
+    }
+
+    for (let index = 0; index < previous.length; index += 1) {
+      previous[index] = current[index];
+    }
+  }
+
+  return previous[right.length];
 }
 
 function escapeHtml(value) {
