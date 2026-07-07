@@ -160,6 +160,8 @@ const elements = {
   completeSummary: document.querySelector("#completeSummary")
 };
 
+const COMPLETED_STORAGE_KEY = "tinytalk.completed.batch01.lessons01-30";
+
 let topics = [];
 let selectedTopic = null;
 let turnIndex = 0;
@@ -563,7 +565,7 @@ function completeLesson() {
 }
 
 function getCompletedRecords() {
-  const raw = localStorage.getItem("tinytalk.completed");
+  const raw = localStorage.getItem(COMPLETED_STORAGE_KEY);
 
   if (!raw) {
     return [];
@@ -598,7 +600,7 @@ function getCompletedRecords() {
       })
       .filter(Boolean);
 
-    localStorage.setItem("tinytalk.completed", JSON.stringify(migrated));
+    localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(migrated));
     return migrated;
   } catch {
     return [];
@@ -606,7 +608,7 @@ function getCompletedRecords() {
 }
 
 function saveCompletedRecords(records) {
-  localStorage.setItem("tinytalk.completed", JSON.stringify(records));
+  localStorage.setItem(COMPLETED_STORAGE_KEY, JSON.stringify(records));
 }
 
 function markTopicComplete(topicId) {
