@@ -163,6 +163,7 @@ let topics = [];
 let selectedTopic = null;
 let turnIndex = 0;
 let recognition = null;
+let preferredTinyTalkVoice = null;
 
 async function loadTopics() {
   try {
@@ -281,9 +282,54 @@ function speakTurn(text) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
-  utterance.rate = 0.85;
+  utterance.voice = getTinyTalkVoice();
+  utterance.pitch = 1.35;
+  utterance.rate = 0.78;
+  utterance.volume = 1;
   utterance.onend = () => setTimeout(nextTurn, 350);
   window.speechSynthesis.speak(utterance);
+}
+
+function getTinyTalkVoice() {
+  if (preferredTinyTalkVoice) {
+    return preferredTinyTalkVoice;
+  }
+
+  const voices = window.speechSynthesis.getVoices();
+  const englishVoices = voices.filter((voice) =>
+    voice.lang.toLowerCase().startsWith("en")
+  );
+
+  const friendlyVoiceNames = [
+    "google us english",
+    "google uk english female",
+    "microsoft aria",
+    "microsoft jenny",
+    "samantha",
+    "karen",
+    "zira"
+  ];
+
+  preferredTinyTalkVoice =
+    friendlyVoiceNames
+      .map((name) =>
+        englishVoices.find((voice) =>
+          voice.name.toLowerCase().includes(name)
+        )
+      )
+      .find(Boolean) ||
+    englishVoices.find((voice) => /female|woman|girl/i.test(voice.name)) ||
+    englishVoices[0] ||
+    null;
+
+  return preferredTinyTalkVoice;
+}
+
+if ("speechSynthesis" in window) {
+  window.speechSynthesis.onvoiceschanged = () => {
+    preferredTinyTalkVoice = null;
+    getTinyTalkVoice();
+  };
 }
 
 function startListening() {
