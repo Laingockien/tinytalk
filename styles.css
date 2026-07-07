@@ -389,7 +389,8 @@ dd {
 
 .controls {
   display: grid;
-  grid-template-columns: 1.1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
 }
 
@@ -431,6 +432,14 @@ dd {
   padding: 0 18px;
   background: var(--color-pure-white);
   color: var(--color-ink-black);
+}
+
+.pass-button {
+  background: transparent;
+  color: var(--color-stone);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
 }
 
 button:disabled {
