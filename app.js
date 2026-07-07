@@ -142,6 +142,8 @@ const screens = {
 
 const elements = {
   searchInput: document.querySelector("#searchInput"),
+  nextTab: document.querySelector("#nextTab"),
+  completedTab: document.querySelector("#completedTab"),
   topicList: document.querySelector("#topicList"),
   lessonLevel: document.querySelector("#lessonLevel"),
   lessonTitle: document.querySelector("#lessonTitle"),
@@ -165,6 +167,7 @@ let recognition = null;
 let preferredTinyTalkVoice = null;
 let listeningTimeout = null;
 let speechPrimed = false;
+let activeTopicTab = "next";
 
 async function loadTopics() {
   try {
@@ -180,7 +183,7 @@ async function loadTopics() {
   }
 
   topics = topics.filter((topic) => topic.isActive);
-  renderTopics(topics);
+  renderCurrentTopicList();
 }
 
 function showScreen(name) {
@@ -188,19 +191,53 @@ function showScreen(name) {
   screens[name].classList.remove("is-hidden");
 }
 
+function goHome() {
+  window.speechSynthesis?.cancel();
+  renderCurrentTopicList();
+  showScreen("home");
+}
+
+function renderCurrentTopicList() {
+  const query = elements.searchInput.value.trim().toLowerCase();
+  const completed = getCompletedRecords();
+  const completedIds = new Set(completed.map((record) => record.id));
+  let list =
+    activeTopicTab === "completed"
+      ? completed
+          .map((record) => ({
+            topic: topics.find((topic) => topic.id === record.id),
+            completedAt: record.completedAt
+          }))
+          .filter((item) => item.topic)
+          .sort((left, right) => right.completedAt - left.completedAt)
+          .map((item) => item.topic)
+      : topics.filter((topic) => !completedIds.has(topic.id));
+
+  if (query) {
+    list = list.filter((topic) => matchesSearch(topic, query));
+  }
+
+  updateTabs();
+  renderTopics(list);
+}
+
 function renderTopics(list) {
   elements.topicList.innerHTML = "";
 
   if (list.length === 0) {
-    elements.topicList.innerHTML = '<p class="intro">No topics found.</p>';
+    const message =
+      activeTopicTab === "completed"
+        ? "No completed conversations yet."
+        : "No conversations to learn next.";
+    elements.topicList.innerHTML = `<p class="empty-state">${message}</p>`;
     return;
   }
 
   list.forEach((topic) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "topic-card";
-    button.innerHTML = `
+    const card = document.createElement("article");
+    card.className = "topic-card";
+    card.tabIndex = 0;
+    card.innerHTML = `
       <h2>${escapeHtml(topic.title)}</h2>
       <p>${escapeHtml(topic.situation)}</p>
       <div class="topic-meta">
@@ -208,33 +245,60 @@ function renderTopics(list) {
         <span class="pill">${topic.turns.length} turns</span>
       </div>
     `;
-    button.addEventListener("click", () => openLesson(topic));
-    elements.topicList.appendChild(button);
+
+    card.addEventListener("click", () => openLesson(topic));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openLesson(topic);
+      }
+    });
+
+    if (activeTopicTab === "completed") {
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "practice-again-button";
+      action.textContent = "Practice again";
+      action.addEventListener("click", (event) => {
+        event.stopPropagation();
+        markTopicIncomplete(topic.id);
+        openLesson(topic);
+      });
+      card.appendChild(action);
+    }
+
+    elements.topicList.appendChild(card);
   });
 }
 
 function filterTopics() {
-  const query = elements.searchInput.value.trim().toLowerCase();
+  renderCurrentTopicList();
+}
 
-  if (!query) {
-    renderTopics(topics);
-    return;
-  }
+function matchesSearch(topic, query) {
+  const haystack = [
+    topic.title,
+    topic.situation,
+    ...(topic.tags || []),
+    ...(topic.keywords || [])
+  ]
+    .join(" ")
+    .toLowerCase();
 
-  const filtered = topics.filter((topic) => {
-    const haystack = [
-      topic.title,
-      topic.situation,
-      ...(topic.tags || []),
-      ...(topic.keywords || [])
-    ]
-      .join(" ")
-      .toLowerCase();
+  return haystack.includes(query);
+}
 
-    return haystack.includes(query);
-  });
+function setTopicTab(tab) {
+  activeTopicTab = tab;
+  renderCurrentTopicList();
+}
 
-  renderTopics(filtered);
+function updateTabs() {
+  const isNext = activeTopicTab === "next";
+  elements.nextTab.classList.toggle("is-active", isNext);
+  elements.completedTab.classList.toggle("is-active", !isNext);
+  elements.nextTab.setAttribute("aria-selected", String(isNext));
+  elements.completedTab.setAttribute("aria-selected", String(!isNext));
 }
 
 function openLesson(topic) {
@@ -492,14 +556,72 @@ function nextTurn() {
 }
 
 function completeLesson() {
-  const completed = JSON.parse(localStorage.getItem("tinytalk.completed") || "[]");
-  if (!completed.includes(selectedTopic.id)) {
-    completed.push(selectedTopic.id);
-    localStorage.setItem("tinytalk.completed", JSON.stringify(completed));
-  }
+  markTopicComplete(selectedTopic.id);
 
   elements.completeSummary.textContent = `You completed "${selectedTopic.title}".`;
   showScreen("complete");
+}
+
+function getCompletedRecords() {
+  const raw = localStorage.getItem("tinytalk.completed");
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const migrated = parsed
+      .map((item, index) => {
+        if (typeof item === "number") {
+          return {
+            id: item,
+            completedAt: Date.now() - (parsed.length - index) * 1000
+          };
+        }
+
+        if (item && typeof item === "object" && Number.isFinite(item.id)) {
+          return {
+            id: item.id,
+            completedAt: Number.isFinite(item.completedAt)
+              ? item.completedAt
+              : Date.now()
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+
+    localStorage.setItem("tinytalk.completed", JSON.stringify(migrated));
+    return migrated;
+  } catch {
+    return [];
+  }
+}
+
+function saveCompletedRecords(records) {
+  localStorage.setItem("tinytalk.completed", JSON.stringify(records));
+}
+
+function markTopicComplete(topicId) {
+  const records = getCompletedRecords().filter((record) => record.id !== topicId);
+  records.push({
+    id: topicId,
+    completedAt: Date.now()
+  });
+  saveCompletedRecords(records);
+}
+
+function markTopicIncomplete(topicId) {
+  const records = getCompletedRecords().filter((record) => record.id !== topicId);
+  saveCompletedRecords(records);
+  activeTopicTab = "next";
 }
 
 function normalizeText(value) {
@@ -622,16 +744,18 @@ function escapeHtml(value) {
 }
 
 elements.searchInput.addEventListener("input", filterTopics);
+elements.nextTab.addEventListener("click", () => setTopicTab("next"));
+elements.completedTab.addEventListener("click", () => setTopicTab("completed"));
 elements.startLesson.addEventListener("click", startLesson);
 elements.listenButton.addEventListener("click", startListening);
 elements.passButton.addEventListener("click", nextTurn);
-document.querySelector("#backToHomeFromIntro").addEventListener("click", () => showScreen("home"));
+document.querySelector("#backToHomeFromIntro").addEventListener("click", goHome);
 document
   .querySelector("#backToHomeFromConversation")
-  .addEventListener("click", () => showScreen("home"));
+  .addEventListener("click", goHome);
 document.querySelector("#practiceAgain").addEventListener("click", startLesson);
 document
   .querySelector("#backToHomeFromComplete")
-  .addEventListener("click", () => showScreen("home"));
+  .addEventListener("click", goHome);
 
 loadTopics();
