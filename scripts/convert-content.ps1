@@ -1,5 +1,9 @@
 param(
-  [string]$Source = "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Content_First10.xlsx",
+  [string[]]$Source = @(
+    "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Batch01_PartA_Lesson01-10.xlsx",
+    "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Batch01_PartB_Lesson11-20.xlsx",
+    "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Batch01_PartC_Lesson21-30.xlsx"
+  ),
   [string]$Output = "public\data\topics.json",
   [string]$DeployOutput = "data\topics.json"
 )
@@ -95,61 +99,67 @@ function Split-List {
   )
 }
 
-$zip = [System.IO.Compression.ZipFile]::OpenRead($Source)
+$topics = @()
 
-try {
-  [xml]$topicsSheet = Read-ZipEntry $zip "xl/worksheets/sheet1.xml"
-  [xml]$turnsSheet = Read-ZipEntry $zip "xl/worksheets/sheet2.xml"
+foreach ($sourceFile in $Source) {
+  $zip = [System.IO.Compression.ZipFile]::OpenRead($sourceFile)
 
-  $topicRows = Get-Rows $topicsSheet
-  $turnRows = Get-Rows $turnsSheet
+  try {
+    [xml]$topicsSheet = Read-ZipEntry $zip "xl/worksheets/sheet1.xml"
+    [xml]$turnsSheet = Read-ZipEntry $zip "xl/worksheets/sheet2.xml"
 
-  $topics = @()
+    $topicRows = Get-Rows $topicsSheet
+    $turnRows = Get-Rows $turnsSheet
 
-  foreach ($topicRow in $topicRows) {
-    $topicId = [int]$topicRow.id
-    $turns = @(
-      $turnRows |
-        Where-Object { [int]$_.topic_id -eq $topicId } |
-        Sort-Object { [int]$_.turn } |
-        ForEach-Object {
-          [ordered]@{
-            order = [int]$_.turn
-            speaker = if ($_.speaker -eq "tinytalk") { "app" } else { $_.speaker }
-            text = $_.english
-            translation = $_.vietnamese
-            acceptableVariants = @()
-            allowPass = $_.can_skip -eq "1" -or $_.can_skip -eq "TRUE"
+    foreach ($topicRow in $topicRows) {
+      $topicId = [int]$topicRow.id
+      $turns = @(
+        $turnRows |
+          Where-Object { [int]$_.topic_id -eq $topicId } |
+          Sort-Object { [int]$_.turn } |
+          ForEach-Object {
+            [ordered]@{
+              order = [int]$_.turn
+              speaker = if ($_.speaker -eq "parent") { "parent" } else { "app" }
+              text = $_.english
+              translation = $_.vietnamese
+              acceptableVariants = @()
+              allowPass = $_.can_skip -eq "1" -or $_.can_skip -eq "TRUE"
+            }
           }
-        }
-    )
+      )
 
-    $topics += ,[ordered]@{
-      id = $topicId
-      order = [int]$topicRow.lesson_order
-      title = $topicRow.title
-      level = "starter"
-      situation = $topicRow.description
-      tags = Split-List $topicRow.tags
-      keywords = Split-List $topicRow.keywords
-      isActive = $true
-      turns = $turns
+      $tagsValue = if ($topicRow.tags) { $topicRow.tags } else { $topicRow.related_keywords }
+
+      $topics += ,[ordered]@{
+        id = $topicId
+        order = [int]$topicRow.lesson_order
+        title = $topicRow.title
+        level = "starter"
+        situation = $topicRow.description
+        tags = Split-List $tagsValue
+        keywords = Split-List $topicRow.keywords
+        isActive = $true
+        turns = $turns
+      }
     }
   }
-
-  $json = $topics | ConvertTo-Json -Depth 20
-
-  $outputPath = Join-Path (Get-Location) $Output
-  $deployOutputPath = Join-Path (Get-Location) $DeployOutput
-
-  New-Item -ItemType Directory -Force -Path (Split-Path -Parent $outputPath) | Out-Null
-  New-Item -ItemType Directory -Force -Path (Split-Path -Parent $deployOutputPath) | Out-Null
-
-  [System.IO.File]::WriteAllText($outputPath, $json, [System.Text.Encoding]::UTF8)
-  [System.IO.File]::WriteAllText($deployOutputPath, $json, [System.Text.Encoding]::UTF8)
-
-  Write-Host "Generated $($topics.Count) topics."
+  finally {
+    $zip.Dispose()
+  }
 }
-finally {
-  $zip.Dispose()
-}
+
+$topics = @($topics | Sort-Object { [int]$_["order"] })
+
+$json = $topics | ConvertTo-Json -Depth 20 -Compress
+
+$outputPath = Join-Path (Get-Location) $Output
+$deployOutputPath = Join-Path (Get-Location) $DeployOutput
+
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $outputPath) | Out-Null
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $deployOutputPath) | Out-Null
+
+[System.IO.File]::WriteAllText($outputPath, $json, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($deployOutputPath, $json, [System.Text.Encoding]::UTF8)
+
+Write-Host "Generated $($topics.Count) topics."
