@@ -1,0 +1,134 @@
+[
+  {
+    "id": 1,
+    "order": 1,
+    "title": "Good Morning",
+    "level": "starter",
+    "situation": "Waking up in the morning",
+    "tags": ["morning", "family", "home"],
+    "keywords": ["wake up", "good morning", "mommy"],
+    "isActive": true,
+    "turns": [
+      {
+        "order": 1,
+        "speaker": "parent",
+        "text": "Good morning, baby.",
+        "translation": "Chao buoi sang, con yeu.",
+        "acceptableVariants": ["Morning, baby.", "Good morning."],
+        "allowPass": true
+      },
+      {
+        "order": 2,
+        "speaker": "app",
+        "text": "Good morning, mommy.",
+        "translation": "Chao buoi sang, me.",
+        "acceptableVariants": [],
+        "allowPass": false
+      },
+      {
+        "order": 3,
+        "speaker": "parent",
+        "text": "Did you sleep well?",
+        "translation": "Con ngu ngon khong?",
+        "acceptableVariants": ["Sleep well?", "Did you sleep good?"],
+        "allowPass": true
+      },
+      {
+        "order": 4,
+        "speaker": "app",
+        "text": "Yes, I did.",
+        "translation": "Co a.",
+        "acceptableVariants": [],
+        "allowPass": false
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "order": 2,
+    "title": "Drink Water",
+    "level": "starter",
+    "situation": "Asking the child to drink water",
+    "tags": ["drink", "water", "home"],
+    "keywords": ["water", "thirsty", "cup"],
+    "isActive": true,
+    "turns": [
+      {
+        "order": 1,
+        "speaker": "parent",
+        "text": "Drink some water.",
+        "translation": "Uong nuoc nao con.",
+        "acceptableVariants": ["Drink water.", "Have some water."],
+        "allowPass": true
+      },
+      {
+        "order": 2,
+        "speaker": "app",
+        "text": "Okay, mommy.",
+        "translation": "Vang a.",
+        "acceptableVariants": [],
+        "allowPass": false
+      },
+      {
+        "order": 3,
+        "speaker": "parent",
+        "text": "Hold your cup.",
+        "translation": "Cam coc cua con nao.",
+        "acceptableVariants": ["Take your cup.", "Hold the cup."],
+        "allowPass": true
+      },
+      {
+        "order": 4,
+        "speaker": "app",
+        "text": "Thank you.",
+        "translation": "Con cam on.",
+        "acceptableVariants": [],
+        "allowPass": false
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "order": 3,
+    "title": "Toy Time",
+    "level": "easy",
+    "situation": "Playing with toys together",
+    "tags": ["toy", "play", "home"],
+    "keywords": ["toys", "play", "blocks"],
+    "isActive": true,
+    "turns": [
+      {
+        "order": 1,
+        "speaker": "parent",
+        "text": "Let's play with toys.",
+        "translation": "Minh choi do choi nhe.",
+        "acceptableVariants": ["Let's play.", "Play with toys."],
+        "allowPass": true
+      },
+      {
+        "order": 2,
+        "speaker": "app",
+        "text": "Yes, let's play!",
+        "translation": "Vang, minh choi nao!",
+        "acceptableVariants": [],
+        "allowPass": false
+      },
+      {
+        "order": 3,
+        "speaker": "parent",
+        "text": "Where is the red block?",
+        "translation": "Khoi mau do o dau?",
+        "acceptableVariants": ["Where is red block?", "Find the red block."],
+        "allowPass": true
+      },
+      {
+        "order": 4,
+        "speaker": "app",
+        "text": "Here it is.",
+        "translation": "No day a.",
+        "acceptableVariants": [],
+        "allowPass": false
+      }
+    ]
+  }
+]

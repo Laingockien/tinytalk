@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TinyTalk</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="screen home-screen" id="homeScreen">
+        <header class="hero">
+          <p class="eyebrow">TinyTalk</p>
+          <h1>Practice one small English conversation today.</h1>
+          <p class="intro">
+            Choose a daily topic, speak the parent lines, and let TinyTalk
+            answer with short child-friendly replies.
+          </p>
+        </header>
+
+        <label class="search-label" for="searchInput">Search topics</label>
+        <input
+          id="searchInput"
+          class="search-input"
+          type="search"
+          placeholder="Try morning, water, toys..."
+          autocomplete="off"
+        />
+
+        <div class="topic-list" id="topicList"></div>
+      </section>
+
+      <section class="screen lesson-screen is-hidden" id="lessonScreen">
+        <button class="text-button" id="backToHomeFromIntro" type="button">
+          Back
+        </button>
+        <p class="eyebrow" id="lessonLevel"></p>
+        <h1 id="lessonTitle"></h1>
+        <p class="intro" id="lessonSituation"></p>
+        <dl class="lesson-meta">
+          <div>
+            <dt>Duration</dt>
+            <dd>3-5 minutes</dd>
+          </div>
+          <div>
+            <dt>Turns</dt>
+            <dd id="lessonTurns"></dd>
+          </div>
+        </dl>
+        <button class="primary-button" id="startLesson" type="button">
+          Start Conversation
+        </button>
+      </section>
+
+      <section class="screen conversation-screen is-hidden" id="conversationScreen">
+        <div class="conversation-topbar">
+          <button class="text-button" id="backToHomeFromConversation" type="button">
+            Home
+          </button>
+          <span id="progressText"></span>
+        </div>
+
+        <article class="dialogue-panel">
+          <p class="speaker" id="speakerLabel"></p>
+          <h2 id="turnText"></h2>
+          <p class="translation" id="turnTranslation"></p>
+        </article>
+
+        <p class="status-message" id="statusMessage"></p>
+
+        <div class="controls">
+          <button class="primary-button" id="listenButton" type="button">
+            Speak
+          </button>
+          <button class="secondary-button" id="retryButton" type="button">
+            Retry
+          </button>
+          <button class="secondary-button" id="passButton" type="button">
+            Pass
+          </button>
+        </div>
+      </section>
+
+      <section class="screen complete-screen is-hidden" id="completeScreen">
+        <p class="eyebrow">Lesson completed</p>
+        <h1>Nice work.</h1>
+        <p class="intro" id="completeSummary"></p>
+        <button class="primary-button" id="practiceAgain" type="button">
+          Practice Again
+        </button>
+        <button class="secondary-button" id="backToHomeFromComplete" type="button">
+          Back to Home
+        </button>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
