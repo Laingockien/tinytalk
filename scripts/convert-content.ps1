@@ -1,6 +1,6 @@
 param(
   [string[]]$Source = @(
-    "C:\Users\PC\Desktop\Tinytalk\New folder\TinyTalk_Demo_10Lessons_With_Emotion.xlsx"
+    "C:\Users\PC\Desktop\Tinytalk\New folder\TinyTalk_Demo_10Lessons_VoicePerformance_V2.xlsx"
   ),
   [string]$Output = "public\data\topics.json",
   [string]$DeployOutput = "data\topics.json"
@@ -118,12 +118,14 @@ foreach ($sourceFile in $Source) {
           ForEach-Object {
             $speaker = if ($_.speaker -eq "parent") { "parent" } else { "app" }
             $emotion = if ($speaker -eq "app" -and $_.emotion) { $_.emotion } else { "neutral" }
+            $intensity = if ($speaker -eq "app" -and $_.intensity) { $_.intensity } else { "medium" }
             [ordered]@{
               order = [int]$_.turn
               speaker = $speaker
               text = $_.english
               translation = $_.vietnamese
               emotion = $emotion
+              intensity = $intensity
               acceptableVariants = @()
               allowPass = $_.can_skip -eq "1" -or $_.can_skip -eq "TRUE"
             }
