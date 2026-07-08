@@ -1,137 +1,4 @@
-const fallbackTopics = [
-  {
-    id: 1,
-    order: 1,
-    title: "Good Morning",
-    level: "starter",
-    situation: "Waking up in the morning",
-    tags: ["morning", "family", "home"],
-    keywords: ["wake up", "good morning", "mommy"],
-    isActive: true,
-    turns: [
-      {
-        order: 1,
-        speaker: "parent",
-        text: "Good morning, baby.",
-        translation: "Chao buoi sang, con yeu.",
-        acceptableVariants: ["Morning, baby.", "Good morning."],
-        allowPass: true
-      },
-      {
-        order: 2,
-        speaker: "app",
-        text: "Good morning, mommy.",
-        translation: "Chao buoi sang, me.",
-        acceptableVariants: [],
-        allowPass: false
-      },
-      {
-        order: 3,
-        speaker: "parent",
-        text: "Did you sleep well?",
-        translation: "Con ngu ngon khong?",
-        acceptableVariants: ["Sleep well?", "Did you sleep good?"],
-        allowPass: true
-      },
-      {
-        order: 4,
-        speaker: "app",
-        text: "Yes, I did.",
-        translation: "Co a.",
-        acceptableVariants: [],
-        allowPass: false
-      }
-    ]
-  },
-  {
-    id: 2,
-    order: 2,
-    title: "Drink Water",
-    level: "starter",
-    situation: "Asking the child to drink water",
-    tags: ["drink", "water", "home"],
-    keywords: ["water", "thirsty", "cup"],
-    isActive: true,
-    turns: [
-      {
-        order: 1,
-        speaker: "parent",
-        text: "Drink some water.",
-        translation: "Uong nuoc nao con.",
-        acceptableVariants: ["Drink water.", "Have some water."],
-        allowPass: true
-      },
-      {
-        order: 2,
-        speaker: "app",
-        text: "Okay, mommy.",
-        translation: "Vang a.",
-        acceptableVariants: [],
-        allowPass: false
-      },
-      {
-        order: 3,
-        speaker: "parent",
-        text: "Hold your cup.",
-        translation: "Cam coc cua con nao.",
-        acceptableVariants: ["Take your cup.", "Hold the cup."],
-        allowPass: true
-      },
-      {
-        order: 4,
-        speaker: "app",
-        text: "Thank you.",
-        translation: "Con cam on.",
-        acceptableVariants: [],
-        allowPass: false
-      }
-    ]
-  },
-  {
-    id: 3,
-    order: 3,
-    title: "Toy Time",
-    level: "easy",
-    situation: "Playing with toys together",
-    tags: ["toy", "play", "home"],
-    keywords: ["toys", "play", "blocks"],
-    isActive: true,
-    turns: [
-      {
-        order: 1,
-        speaker: "parent",
-        text: "Let's play with toys.",
-        translation: "Minh choi do choi nhe.",
-        acceptableVariants: ["Let's play.", "Play with toys."],
-        allowPass: true
-      },
-      {
-        order: 2,
-        speaker: "app",
-        text: "Yes, let's play!",
-        translation: "Vang, minh choi nao!",
-        acceptableVariants: [],
-        allowPass: false
-      },
-      {
-        order: 3,
-        speaker: "parent",
-        text: "Where is the red block?",
-        translation: "Khoi mau do o dau?",
-        acceptableVariants: ["Where is red block?", "Find the red block."],
-        allowPass: true
-      },
-      {
-        order: 4,
-        speaker: "app",
-        text: "Here it is.",
-        translation: "No day a.",
-        acceptableVariants: [],
-        allowPass: false
-      }
-    ]
-  }
-];
+const fallbackTopics = [];
 
 const screens = {
   home: document.querySelector("#homeScreen"),
@@ -161,15 +28,101 @@ const elements = {
 };
 
 const COMPLETED_STORAGE_KEY = "tinytalk.completed.batch01.lessons01-30";
-const VOICE_EMOTION_MAP = {
-  neutral: { pitch: 1.25, rate: 0.82 },
-  happy: { pitch: 1.35, rate: 0.86 },
-  excited: { pitch: 1.5, rate: 0.95 },
-  curious: { pitch: 1.35, rate: 0.82 },
-  proud: { pitch: 1.4, rate: 0.88 },
-  sleepy: { pitch: 1.05, rate: 0.65 },
-  shy: { pitch: 1.15, rate: 0.72 },
-  surprised: { pitch: 1.45, rate: 0.9 }
+const VOICE_PERFORMANCE_MAP = {
+  neutral: {
+    pitch: 1.2,
+    rate: 0.82,
+    volume: 1,
+    variants: [
+      { id: "neutral_1", weight: 50, style: "base", buildSpokenText: (text) => normalizeSpokenText(text) },
+      { id: "neutral_2", weight: 30, style: "base", buildSpokenText: (text) => normalizeSpokenText(text) },
+      { id: "neutral_3", weight: 20, style: "gentle", buildSpokenText: (text) => normalizeSpokenText(text) }
+    ]
+  },
+  happy: {
+    pitch: 1.35,
+    rate: 0.86,
+    volume: 1,
+    variants: [
+      { id: "happy_1", weight: 40, style: "base", buildSpokenText: (text) => ensureEnding(text, "!") },
+      { id: "happy_2", weight: 30, style: "leadIn", buildSpokenText: (text) => `Yay! ${ensureEnding(text, "!")}` },
+      { id: "happy_3", weight: 20, style: "leadIn", buildSpokenText: (text) => `Hehe! ${ensureEnding(text, "!")}` },
+      { id: "happy_4", weight: 10, style: "leadIn", buildSpokenText: (text) => `${ensureEnding(text, "!")} Hehe!` }
+    ]
+  },
+  excited: {
+    pitch: 1.48,
+    rate: 0.94,
+    volume: 1,
+    variants: [
+      { id: "excited_1", weight: 30, style: "strong", buildSpokenText: (text) => `Yay! ${ensureEnding(text, "!!")}` },
+      { id: "excited_2", weight: 25, style: "strong", buildSpokenText: (text) => `Woohoo! ${ensureEnding(text, "!!")}` },
+      { id: "excited_3", weight: 25, style: "base", buildSpokenText: (text) => ensureEnding(text, "!!") },
+      { id: "excited_4", weight: 10, style: "strong", buildSpokenText: (text) => `${ensureEnding(text, "!")} ${ensureEnding(text, "!!")}` },
+      { id: "excited_5", weight: 10, style: "strong", buildSpokenText: (text) => `Let's go! ${ensureEnding(text, "!!")}` }
+    ]
+  },
+  curious: {
+    pitch: 1.32,
+    rate: 0.8,
+    volume: 0.95,
+    variants: [
+      { id: "curious_1", weight: 45, style: "base", buildSpokenText: (text) => ensureEnding(text, "?") },
+      { id: "curious_2", weight: 30, style: "thinking", buildSpokenText: (text) => `Hmm... ${ensureEnding(text, "?")}` },
+      { id: "curious_3", weight: 15, style: "thinking", buildSpokenText: (text) => `Oh? ${ensureEnding(text, "?")}` },
+      { id: "curious_4", weight: 10, style: "thinking", buildSpokenText: (text) => `Wait... ${ensureEnding(text, "?")}` }
+    ]
+  },
+  proud: {
+    pitch: 1.38,
+    rate: 0.86,
+    volume: 1,
+    variants: [
+      { id: "proud_1", weight: 45, style: "base", buildSpokenText: (text) => ensureEnding(text, "!") },
+      { id: "proud_2", weight: 30, style: "leadIn", buildSpokenText: (text) => `Yes! ${ensureEnding(text, "!")}` },
+      { id: "proud_3", weight: 15, style: "leadIn", buildSpokenText: (text) => `Look! ${ensureEnding(text, "!")}` },
+      { id: "proud_4", weight: 10, style: "leadIn", buildSpokenText: (text) => `${ensureEnding(text, "!")} I did it!` }
+    ]
+  },
+  sleepy: {
+    pitch: 1.05,
+    rate: 0.65,
+    volume: 0.8,
+    variants: [
+      { id: "sleepy_1", weight: 45, style: "base", buildSpokenText: (text) => ensureEnding(text, "...") },
+      { id: "sleepy_2", weight: 30, style: "soft", buildSpokenText: (text) => `Hmm... ${ensureEnding(text, "...")}` },
+      { id: "sleepy_3", weight: 15, style: "soft", buildSpokenText: (text) => `Ahh... ${ensureEnding(text, "...")}` },
+      { id: "sleepy_4", weight: 10, style: "soft", buildSpokenText: (text) => ensureEnding(text, "...") }
+    ]
+  },
+  shy: {
+    pitch: 1.12,
+    rate: 0.72,
+    volume: 0.75,
+    variants: [
+      { id: "shy_1", weight: 45, style: "base", buildSpokenText: (text) => normalizeSpokenText(text) },
+      { id: "shy_2", weight: 30, style: "soft", buildSpokenText: (text) => `Um... ${normalizeSpokenText(text)}` },
+      { id: "shy_3", weight: 15, style: "soft", buildSpokenText: (text) => `Uh... ${normalizeSpokenText(text)}` },
+      { id: "shy_4", weight: 10, style: "soft", buildSpokenText: (text) => `Maybe... ${normalizeSpokenText(text)}` }
+    ]
+  },
+  surprised: {
+    pitch: 1.45,
+    rate: 0.9,
+    volume: 1,
+    variants: [
+      { id: "surprised_1", weight: 35, style: "strong", buildSpokenText: (text) => `Wow! ${ensureEnding(text, "?!")}` },
+      { id: "surprised_2", weight: 25, style: "strong", buildSpokenText: (text) => `Oh! ${ensureEnding(text, "?!")}` },
+      { id: "surprised_3", weight: 20, style: "strong", buildSpokenText: (text) => `Wait! ${ensureEnding(text, "?!")}` },
+      { id: "surprised_4", weight: 20, style: "base", buildSpokenText: (text) => ensureEnding(text, "?!") }
+    ]
+  }
+};
+
+const VOICE_INTENSITY_MAP = {
+  low: { pitch: -0.04, rate: -0.03, volume: -0.05 },
+  medium: { pitch: 0, rate: 0, volume: 0 },
+  high: { pitch: 0.05, rate: 0.04, volume: 0.03 }
 };
 
 let topics = [];
@@ -345,11 +298,11 @@ function renderTurn() {
   resetTalkButton();
 
   if (!isParent) {
-    speakTurn(turn.text, turn.emotion);
+    speakTurn(turn.text, turn.emotion, turn.intensity);
   }
 }
 
-function speakTurn(text, emotion = "neutral") {
+function speakTurn(text, emotion = "neutral", intensity = "medium") {
   if (!("speechSynthesis" in window)) {
     elements.statusMessage.textContent =
       "Text-to-speech is not supported in this browser.";
@@ -358,27 +311,27 @@ function speakTurn(text, emotion = "neutral") {
   }
 
   primeSpeechSynthesis();
-  setTimeout(() => playTinyTalkSpeech(text, emotion), 120);
+  setTimeout(() => playTinyTalkSpeech(text, emotion, intensity), 120);
 }
 
-function playTinyTalkSpeech(text, emotion = "neutral", attempt = 1) {
+function playTinyTalkSpeech(text, emotion = "neutral", intensity = "medium", attempt = 1) {
   const voicesReady = window.speechSynthesis.getVoices().length > 0;
 
   if (!voicesReady && attempt <= 6) {
-    setTimeout(() => playTinyTalkSpeech(text, emotion, attempt + 1), 180);
+    setTimeout(() => playTinyTalkSpeech(text, emotion, intensity, attempt + 1), 180);
     return;
   }
 
   window.speechSynthesis.cancel();
   window.speechSynthesis.resume();
 
-  const speechSettings = getEmotionSpeechSettings(emotion);
-  const utterance = new SpeechSynthesisUtterance(text);
+  const performance = buildVoicePerformance(text, emotion, intensity);
+  const utterance = new SpeechSynthesisUtterance(performance.spokenText);
   utterance.lang = "en-US";
   utterance.voice = getTinyTalkVoice();
-  utterance.pitch = speechSettings.pitch;
-  utterance.rate = speechSettings.rate;
-  utterance.volume = 1;
+  utterance.pitch = performance.settings.pitch;
+  utterance.rate = performance.settings.rate;
+  utterance.volume = performance.settings.volume;
 
   let finished = false;
   const finishSpeaking = () => {
@@ -393,7 +346,7 @@ function playTinyTalkSpeech(text, emotion = "neutral", attempt = 1) {
   utterance.onend = finishSpeaking;
   utterance.onerror = () => {
     if (attempt <= 2) {
-      setTimeout(() => playTinyTalkSpeech(text, emotion, attempt + 1), 250);
+      setTimeout(() => playTinyTalkSpeech(text, emotion, intensity, attempt + 1), 250);
       return;
     }
 
@@ -406,19 +359,94 @@ function playTinyTalkSpeech(text, emotion = "neutral", attempt = 1) {
     if (!finished && !window.speechSynthesis.speaking) {
       window.speechSynthesis.resume();
       if (attempt <= 2) {
-        playTinyTalkSpeech(text, emotion, attempt + 1);
+        playTinyTalkSpeech(text, emotion, intensity, attempt + 1);
       }
     }
   }, 900);
 }
 
-function getEmotionSpeechSettings(emotion) {
-  const normalizedEmotion = String(emotion || "neutral").toLowerCase();
-  const base = VOICE_EMOTION_MAP[normalizedEmotion] || VOICE_EMOTION_MAP.neutral;
+function buildVoicePerformance(displayText, emotion, intensity) {
+  const normalizedEmotion = normalizeEmotion(emotion);
+  const normalizedIntensity = normalizeIntensity(intensity);
+  const recipe = VOICE_PERFORMANCE_MAP[normalizedEmotion] || VOICE_PERFORMANCE_MAP.neutral;
+  const variant = pickVoiceVariant(recipe.variants, normalizedIntensity);
+  const settings = applyRandomVariation(recipe, normalizedIntensity);
+
   return {
-    pitch: clamp(base.pitch + randomBetween(-0.04, 0.04), 0.8, 1.6),
-    rate: clamp(base.rate + randomBetween(-0.03, 0.03), 0.6, 1)
+    spokenText: variant.buildSpokenText(displayText),
+    settings
   };
+}
+
+function normalizeEmotion(emotion) {
+  const normalizedEmotion = String(emotion || "neutral").toLowerCase();
+  return VOICE_PERFORMANCE_MAP[normalizedEmotion] ? normalizedEmotion : "neutral";
+}
+
+function normalizeIntensity(intensity) {
+  const normalizedIntensity = String(intensity || "medium").toLowerCase();
+  return VOICE_INTENSITY_MAP[normalizedIntensity] ? normalizedIntensity : "medium";
+}
+
+function pickVoiceVariant(variants, intensity) {
+  if (!Array.isArray(variants) || variants.length === 0) {
+    return {
+      buildSpokenText: (text) => normalizeSpokenText(text)
+    };
+  }
+
+  let pool = variants;
+
+  if (intensity === "low") {
+    pool = variants.filter((variant) => variant.style === "base" || variant.style === "soft");
+    if (pool.length === 0) {
+      pool = variants;
+    }
+  }
+
+  if (intensity === "high") {
+    pool = variants.map((variant) => ({
+      ...variant,
+      weight: variant.weight * (variant.style === "strong" || variant.style === "leadIn" ? 1.4 : 1)
+    }));
+  }
+
+  return pickWeightedVariant(pool);
+}
+
+function pickWeightedVariant(variants) {
+  const totalWeight = variants.reduce((sum, variant) => sum + (variant.weight || 1), 0);
+  let random = Math.random() * totalWeight;
+
+  for (const variant of variants) {
+    random -= variant.weight || 1;
+    if (random <= 0) {
+      return variant;
+    }
+  }
+
+  return variants[0];
+}
+
+function applyRandomVariation(recipe, intensity) {
+  const base = VOICE_INTENSITY_MAP[intensity] || VOICE_INTENSITY_MAP.medium;
+  return {
+    pitch: clamp(recipe.pitch + base.pitch + randomBetween(-0.04, 0.04), 0.8, 1.6),
+    rate: clamp(recipe.rate + base.rate + randomBetween(-0.03, 0.03), 0.6, 1),
+    volume: clamp(recipe.volume + base.volume + randomBetween(-0.05, 0.05), 0.6, 1)
+  };
+}
+
+function normalizeSpokenText(text) {
+  return String(text || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/(\.\.\.|[.?!])+$/g, "");
+}
+
+function ensureEnding(text, ending) {
+  const cleanText = normalizeSpokenText(text);
+  return `${cleanText}${ending}`;
 }
 
 function randomBetween(min, max) {
