@@ -118,11 +118,14 @@ foreach ($sourceFile in $Source) {
           Where-Object { [int]$_.topic_id -eq $topicId } |
           Sort-Object { [int]$_.turn } |
           ForEach-Object {
+            $speaker = if ($_.speaker -eq "parent") { "parent" } else { "app" }
+            $emotion = if ($speaker -eq "app" -and $_.emotion) { $_.emotion } else { "neutral" }
             [ordered]@{
               order = [int]$_.turn
-              speaker = if ($_.speaker -eq "parent") { "parent" } else { "app" }
+              speaker = $speaker
               text = $_.english
               translation = $_.vietnamese
+              emotion = $emotion
               acceptableVariants = @()
               allowPass = $_.can_skip -eq "1" -or $_.can_skip -eq "TRUE"
             }
