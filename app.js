@@ -29,94 +29,14 @@ const elements = {
 
 const COMPLETED_STORAGE_KEY = "tinytalk.completed.batch01.lessons01-30";
 const VOICE_PERFORMANCE_MAP = {
-  neutral: {
-    pitch: 1.2,
-    rate: 0.82,
-    volume: 1,
-    variants: [
-      { id: "neutral_1", weight: 50, style: "base", buildSpokenText: (text) => normalizeSpokenText(text) },
-      { id: "neutral_2", weight: 30, style: "base", buildSpokenText: (text) => normalizeSpokenText(text) },
-      { id: "neutral_3", weight: 20, style: "gentle", buildSpokenText: (text) => normalizeSpokenText(text) }
-    ]
-  },
-  happy: {
-    pitch: 1.35,
-    rate: 0.86,
-    volume: 1,
-    variants: [
-      { id: "happy_1", weight: 40, style: "base", buildSpokenText: (text) => ensureEnding(text, "!") },
-      { id: "happy_2", weight: 30, style: "leadIn", buildSpokenText: (text) => `Yay! ${ensureEnding(text, "!")}` },
-      { id: "happy_3", weight: 20, style: "leadIn", buildSpokenText: (text) => `Hehe! ${ensureEnding(text, "!")}` },
-      { id: "happy_4", weight: 10, style: "leadIn", buildSpokenText: (text) => `${ensureEnding(text, "!")} Hehe!` }
-    ]
-  },
-  excited: {
-    pitch: 1.48,
-    rate: 0.94,
-    volume: 1,
-    variants: [
-      { id: "excited_1", weight: 30, style: "strong", buildSpokenText: (text) => `Yay! ${ensureEnding(text, "!!")}` },
-      { id: "excited_2", weight: 25, style: "strong", buildSpokenText: (text) => `Woohoo! ${ensureEnding(text, "!!")}` },
-      { id: "excited_3", weight: 25, style: "base", buildSpokenText: (text) => ensureEnding(text, "!!") },
-      { id: "excited_4", weight: 10, style: "strong", buildSpokenText: (text) => `${ensureEnding(text, "!")} ${ensureEnding(text, "!!")}` },
-      { id: "excited_5", weight: 10, style: "strong", buildSpokenText: (text) => `Let's go! ${ensureEnding(text, "!!")}` }
-    ]
-  },
-  curious: {
-    pitch: 1.32,
-    rate: 0.8,
-    volume: 0.95,
-    variants: [
-      { id: "curious_1", weight: 45, style: "base", buildSpokenText: (text) => ensureEnding(text, "?") },
-      { id: "curious_2", weight: 30, style: "thinking", buildSpokenText: (text) => `Hmm... ${ensureEnding(text, "?")}` },
-      { id: "curious_3", weight: 15, style: "thinking", buildSpokenText: (text) => `Oh? ${ensureEnding(text, "?")}` },
-      { id: "curious_4", weight: 10, style: "thinking", buildSpokenText: (text) => `Wait... ${ensureEnding(text, "?")}` }
-    ]
-  },
-  proud: {
-    pitch: 1.38,
-    rate: 0.86,
-    volume: 1,
-    variants: [
-      { id: "proud_1", weight: 45, style: "base", buildSpokenText: (text) => ensureEnding(text, "!") },
-      { id: "proud_2", weight: 30, style: "leadIn", buildSpokenText: (text) => `Yes! ${ensureEnding(text, "!")}` },
-      { id: "proud_3", weight: 15, style: "leadIn", buildSpokenText: (text) => `Look! ${ensureEnding(text, "!")}` },
-      { id: "proud_4", weight: 10, style: "leadIn", buildSpokenText: (text) => `${ensureEnding(text, "!")} I did it!` }
-    ]
-  },
-  sleepy: {
-    pitch: 1.05,
-    rate: 0.65,
-    volume: 0.8,
-    variants: [
-      { id: "sleepy_1", weight: 45, style: "base", buildSpokenText: (text) => ensureEnding(text, "...") },
-      { id: "sleepy_2", weight: 30, style: "soft", buildSpokenText: (text) => `Hmm... ${ensureEnding(text, "...")}` },
-      { id: "sleepy_3", weight: 15, style: "soft", buildSpokenText: (text) => `Ahh... ${ensureEnding(text, "...")}` },
-      { id: "sleepy_4", weight: 10, style: "soft", buildSpokenText: (text) => ensureEnding(text, "...") }
-    ]
-  },
-  shy: {
-    pitch: 1.12,
-    rate: 0.72,
-    volume: 0.75,
-    variants: [
-      { id: "shy_1", weight: 45, style: "base", buildSpokenText: (text) => normalizeSpokenText(text) },
-      { id: "shy_2", weight: 30, style: "soft", buildSpokenText: (text) => `Um... ${normalizeSpokenText(text)}` },
-      { id: "shy_3", weight: 15, style: "soft", buildSpokenText: (text) => `Uh... ${normalizeSpokenText(text)}` },
-      { id: "shy_4", weight: 10, style: "soft", buildSpokenText: (text) => `Maybe... ${normalizeSpokenText(text)}` }
-    ]
-  },
-  surprised: {
-    pitch: 1.45,
-    rate: 0.9,
-    volume: 1,
-    variants: [
-      { id: "surprised_1", weight: 35, style: "strong", buildSpokenText: (text) => `Wow! ${ensureEnding(text, "?!")}` },
-      { id: "surprised_2", weight: 25, style: "strong", buildSpokenText: (text) => `Oh! ${ensureEnding(text, "?!")}` },
-      { id: "surprised_3", weight: 20, style: "strong", buildSpokenText: (text) => `Wait! ${ensureEnding(text, "?!")}` },
-      { id: "surprised_4", weight: 20, style: "base", buildSpokenText: (text) => ensureEnding(text, "?!") }
-    ]
-  }
+  neutral: { pitch: 1.2, rate: 0.82, volume: 1 },
+  happy: { pitch: 1.35, rate: 0.86, volume: 1 },
+  excited: { pitch: 1.48, rate: 0.94, volume: 1 },
+  curious: { pitch: 1.32, rate: 0.8, volume: 0.95 },
+  proud: { pitch: 1.38, rate: 0.86, volume: 1 },
+  sleepy: { pitch: 1.05, rate: 0.65, volume: 0.8 },
+  shy: { pitch: 1.12, rate: 0.72, volume: 0.75 },
+  surprised: { pitch: 1.45, rate: 0.9, volume: 1 }
 };
 
 const VOICE_INTENSITY_MAP = {
@@ -369,11 +289,10 @@ function buildVoicePerformance(displayText, emotion, intensity) {
   const normalizedEmotion = normalizeEmotion(emotion);
   const normalizedIntensity = normalizeIntensity(intensity);
   const recipe = VOICE_PERFORMANCE_MAP[normalizedEmotion] || VOICE_PERFORMANCE_MAP.neutral;
-  const variant = pickVoiceVariant(recipe.variants, normalizedIntensity);
   const settings = applyRandomVariation(recipe, normalizedIntensity);
 
   return {
-    spokenText: variant.buildSpokenText(displayText),
+    spokenText: String(displayText || ""),
     settings
   };
 }
@@ -388,46 +307,6 @@ function normalizeIntensity(intensity) {
   return VOICE_INTENSITY_MAP[normalizedIntensity] ? normalizedIntensity : "medium";
 }
 
-function pickVoiceVariant(variants, intensity) {
-  if (!Array.isArray(variants) || variants.length === 0) {
-    return {
-      buildSpokenText: (text) => normalizeSpokenText(text)
-    };
-  }
-
-  let pool = variants;
-
-  if (intensity === "low") {
-    pool = variants.filter((variant) => variant.style === "base" || variant.style === "soft");
-    if (pool.length === 0) {
-      pool = variants;
-    }
-  }
-
-  if (intensity === "high") {
-    pool = variants.map((variant) => ({
-      ...variant,
-      weight: variant.weight * (variant.style === "strong" || variant.style === "leadIn" ? 1.4 : 1)
-    }));
-  }
-
-  return pickWeightedVariant(pool);
-}
-
-function pickWeightedVariant(variants) {
-  const totalWeight = variants.reduce((sum, variant) => sum + (variant.weight || 1), 0);
-  let random = Math.random() * totalWeight;
-
-  for (const variant of variants) {
-    random -= variant.weight || 1;
-    if (random <= 0) {
-      return variant;
-    }
-  }
-
-  return variants[0];
-}
-
 function applyRandomVariation(recipe, intensity) {
   const base = VOICE_INTENSITY_MAP[intensity] || VOICE_INTENSITY_MAP.medium;
   return {
@@ -435,18 +314,6 @@ function applyRandomVariation(recipe, intensity) {
     rate: clamp(recipe.rate + base.rate + randomBetween(-0.03, 0.03), 0.6, 1),
     volume: clamp(recipe.volume + base.volume + randomBetween(-0.05, 0.05), 0.6, 1)
   };
-}
-
-function normalizeSpokenText(text) {
-  return String(text || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .replace(/(\.\.\.|[.?!])+$/g, "");
-}
-
-function ensureEnding(text, ending) {
-  const cleanText = normalizeSpokenText(text);
-  return `${cleanText}${ending}`;
 }
 
 function randomBetween(min, max) {
