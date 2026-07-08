@@ -161,6 +161,16 @@ const elements = {
 };
 
 const COMPLETED_STORAGE_KEY = "tinytalk.completed.batch01.lessons01-30";
+const VOICE_EMOTION_MAP = {
+  neutral: { pitch: 1.25, rate: 0.82 },
+  happy: { pitch: 1.35, rate: 0.86 },
+  excited: { pitch: 1.5, rate: 0.95 },
+  curious: { pitch: 1.35, rate: 0.82 },
+  proud: { pitch: 1.4, rate: 0.88 },
+  sleepy: { pitch: 1.05, rate: 0.65 },
+  shy: { pitch: 1.15, rate: 0.72 },
+  surprised: { pitch: 1.45, rate: 0.9 }
+};
 
 let topics = [];
 let selectedTopic = null;
@@ -335,11 +345,11 @@ function renderTurn() {
   resetTalkButton();
 
   if (!isParent) {
-    speakTurn(turn.text);
+    speakTurn(turn.text, turn.emotion);
   }
 }
 
-function speakTurn(text) {
+function speakTurn(text, emotion = "neutral") {
   if (!("speechSynthesis" in window)) {
     elements.statusMessage.textContent =
       "Text-to-speech is not supported in this browser.";
@@ -348,25 +358,26 @@ function speakTurn(text) {
   }
 
   primeSpeechSynthesis();
-  setTimeout(() => playTinyTalkSpeech(text), 120);
+  setTimeout(() => playTinyTalkSpeech(text, emotion), 120);
 }
 
-function playTinyTalkSpeech(text, attempt = 1) {
+function playTinyTalkSpeech(text, emotion = "neutral", attempt = 1) {
   const voicesReady = window.speechSynthesis.getVoices().length > 0;
 
   if (!voicesReady && attempt <= 6) {
-    setTimeout(() => playTinyTalkSpeech(text, attempt + 1), 180);
+    setTimeout(() => playTinyTalkSpeech(text, emotion, attempt + 1), 180);
     return;
   }
 
   window.speechSynthesis.cancel();
   window.speechSynthesis.resume();
 
+  const speechSettings = getEmotionSpeechSettings(emotion);
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.voice = getTinyTalkVoice();
-  utterance.pitch = 1.35;
-  utterance.rate = 0.78;
+  utterance.pitch = speechSettings.pitch;
+  utterance.rate = speechSettings.rate;
   utterance.volume = 1;
 
   let finished = false;
@@ -382,7 +393,7 @@ function playTinyTalkSpeech(text, attempt = 1) {
   utterance.onend = finishSpeaking;
   utterance.onerror = () => {
     if (attempt <= 2) {
-      setTimeout(() => playTinyTalkSpeech(text, attempt + 1), 250);
+      setTimeout(() => playTinyTalkSpeech(text, emotion, attempt + 1), 250);
       return;
     }
 
@@ -395,10 +406,27 @@ function playTinyTalkSpeech(text, attempt = 1) {
     if (!finished && !window.speechSynthesis.speaking) {
       window.speechSynthesis.resume();
       if (attempt <= 2) {
-        playTinyTalkSpeech(text, attempt + 1);
+        playTinyTalkSpeech(text, emotion, attempt + 1);
       }
     }
   }, 900);
+}
+
+function getEmotionSpeechSettings(emotion) {
+  const normalizedEmotion = String(emotion || "neutral").toLowerCase();
+  const base = VOICE_EMOTION_MAP[normalizedEmotion] || VOICE_EMOTION_MAP.neutral;
+  return {
+    pitch: clamp(base.pitch + randomBetween(-0.04, 0.04), 0.8, 1.6),
+    rate: clamp(base.rate + randomBetween(-0.03, 0.03), 0.6, 1)
+  };
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function getTinyTalkVoice() {
