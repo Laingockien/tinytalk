@@ -1,8 +1,6 @@
 param(
   [string[]]$Source = @(
-    "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Batch01_PartA_Lesson01-10.xlsx",
-    "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Batch01_PartB_Lesson11-20.xlsx",
-    "C:\Users\PC\Desktop\Tinytalk\TinyTalk_Batch01_PartC_Lesson21-30.xlsx"
+    "C:\Users\PC\Desktop\Tinytalk\New folder\TinyTalk_Demo_10Lessons_With_Emotion.xlsx"
   ),
   [string]$Output = "public\data\topics.json",
   [string]$DeployOutput = "data\topics.json"
@@ -140,8 +138,8 @@ foreach ($sourceFile in $Source) {
         title = $topicRow.title
         level = "starter"
         situation = $topicRow.description
-        tags = Split-List $tagsValue
-        keywords = Split-List $topicRow.keywords
+        tags = @((Split-List $tagsValue))
+        keywords = @((Split-List $topicRow.keywords))
         isActive = $true
         turns = $turns
       }
